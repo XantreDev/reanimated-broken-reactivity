@@ -27,6 +27,7 @@ import {
 import {
   DerivedValue,
   runOnJS,
+  SharedValue,
   useAnimatedReaction,
   useDerivedValue,
   useSharedValue,
@@ -67,6 +68,12 @@ const mapTimes = <T,>(times: number, callback: (time: number) => T) =>
 const logOnJs = (name: string, value: unknown) =>
   console.log(name, value);
 
+const sumWorklet =(arr: SharedValue<number>[]) => {
+  'worklet'
+
+  return arr.reduce((acc, v) => acc + v.value, 0) 
+}
+
 
 function App(): JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -80,9 +87,11 @@ function App(): JSX.Element {
   const derivedValues = mapTimes(100, time =>
     useDerivedValue(() => counter.value * time),
   );
-  const sum = useDerivedValue(() =>
-    derivedValues.reduce((acc, v) => acc + v.value, 0),
-  );
+  
+  const sum1 = useDerivedValue(() => derivedValues.reduce((acc, v) => acc + v.value, 0))
+  const sum2= useDerivedValue(() => derivedValues.reduce((acc, v) => acc + v.value, 0))
+  const sum = useDerivedValue(() => sum1.value + sum2.value)
+
 
   useAnimatedReaction(
     () => sum.value,
@@ -93,7 +102,7 @@ function App(): JSX.Element {
       counter.value = Math.random() * 100
       updatesCountRef.current++
       console.log('update', updatesCountRef.current)
-    }, 2);
+    }, 0.2);
 
     return () => clearInterval(intervalId);
   }, []);
