@@ -24,14 +24,6 @@ import {
   LearnMoreLinks,
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
-import {
-  DerivedValue,
-  runOnJS,
-  SharedValue,
-  useAnimatedReaction,
-  useDerivedValue,
-  useSharedValue,
-} from 'react-native-reanimated';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -62,36 +54,32 @@ function Section({children, title}: SectionProps): JSX.Element {
     </View>
   );
 }
+import {
+  useDerivedValue,
+  useSharedValue,
+  useAnimatedReaction,
+  runOnJS,
+} from 'react-native-reanimated';
 
 const mapTimes = <T,>(times: number, callback: (time: number) => T) =>
   new Array(times).fill(undefined).map((__, i) => callback(i + 1));
-const logOnJs = (name: string, value: unknown) =>
-  console.log(name, value);
+const logOnJs = (name: string, value: unknown) => console.log(name, value);
 
-const sumWorklet =(arr: SharedValue<number>[]) => {
-  'worklet'
-
-  return arr.reduce((acc, v) => acc + v.value, 0) 
-}
-
-
-function App(): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  const updatesCountRef = useRef(0)
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+export const ReactivityTest = () => {
+  const updatesCountRef = useRef(0);
   const counter = useSharedValue(0);
 
   const derivedValues = mapTimes(100, time =>
     useDerivedValue(() => counter.value * time),
   );
-  
-  const sum1 = useDerivedValue(() => derivedValues.reduce((acc, v) => acc + v.value, 0))
-  const sum2= useDerivedValue(() => derivedValues.reduce((acc, v) => acc + v.value, 0))
-  const sum = useDerivedValue(() => sum1.value + sum2.value)
 
+  const sum1 = useDerivedValue(() =>
+    derivedValues.reduce((acc, v) => acc + v.value, 0),
+  );
+  const sum2 = useDerivedValue(() =>
+    derivedValues.reduce((acc, v) => acc + v.value, 0),
+  );
+  const sum = useDerivedValue(() => sum1.value + sum2.value);
 
   useAnimatedReaction(
     () => sum.value,
@@ -99,16 +87,27 @@ function App(): JSX.Element {
   );
   useEffect(() => {
     const intervalId = setInterval(() => {
-      counter.value = Math.random() * 100
-      updatesCountRef.current++
-      console.log('update', updatesCountRef.current)
+      counter.value = Math.random() * 100;
+      updatesCountRef.current++;
+      console.log('update', updatesCountRef.current);
     }, 0.2);
 
     return () => clearInterval(intervalId);
   }, []);
 
+  return null;
+};
+
+function App(): JSX.Element {
+  const isDarkMode = useColorScheme() === 'dark';
+
+  const backgroundStyle = {
+    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  };
+
   return (
     <SafeAreaView style={backgroundStyle}>
+      <ReactivityTest />
       <StatusBar
         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
         backgroundColor={backgroundStyle.backgroundColor}
